@@ -1,0 +1,41 @@
+name: Random Video Bot
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # ၃၀ မိနစ်ပြည့်တိုင်း
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # ဖိုင်ပြန် Save ဖို့ ခွင့်ပြုချက်
+    
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install Pyrogram
+        run: pip install pyrogram tgcrypto
+
+      - name: Run Bot
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          FROM_CHANNEL: ${{ secrets.FROM_CHANNEL }}
+          TO_GROUP: ${{ secrets.TO_GROUP }}
+        run: python bot.py
+        
+      - name: Save History
+        run: |
+          git config --global user.name 'Bot'
+          git config --global user.email 'bot@noreply.github.com'
+          git add posted_ids.txt
+          # အပြောင်းအလဲရှိမှ Commit မယ်
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update history [skip ci]" && git push)
